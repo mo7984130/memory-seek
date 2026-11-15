@@ -44,3 +44,16 @@ jobs:
             with:
               shared-key: ci
           - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+
+    test:
+        name: test
+        runs-on: ubuntu-22.04
+        steps:
+          - uses: actions/checkout@v5
+          - uses: dtolnay/rust-toolchain@master
+            with:
+              toolchain: "1.100.0"
+          - uses: Swatinem/rust-cache@v2
+            with:
+              shared-key: ci
+          - run: cargo test --locked --workspace --all-features --no-fail-fast
