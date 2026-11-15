@@ -13,6 +13,8 @@ words = [
     "setval",
     "rustfmt",
     "clippy",
+    "cli",
+    "txn",
 
     "HKDF",
     "matroska",
