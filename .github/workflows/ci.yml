@@ -94,12 +94,12 @@ jobs:
                 shared-key: rust-debug
                 save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
             - uses: taiki-e/install-action@v2
+              with:
+                tool: cargo-hack@0.6.45
             - name: Install sccache
               uses: mozilla-actions/sccache-action@v0.0.10
             - name: Enable sccache
               run: |
                 echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
                 echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
-              with:
-                tool: cargo-hack@0.6.45
             - run: bash scripts/check-features.sh --depth 2
