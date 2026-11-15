@@ -1,0 +1,37 @@
+[package]
+name = "web-server"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+auth = ["dep:auth", "server/db", "server/redis", "server/email", "server/token_cipher", "server/multi_level_cache"]
+user = ["dep:user", "server/db", "server/redis", "server/token_cipher", "server/s3_client", "server/multi_level_cache"]
+
+[dependencies]
+server = { workspace = true, features = [
+    "redis"
+] }
+common-core = { workspace = true, features = ["redis"] }
+common-web.workspace = true
+type-core.workspace = true
+constant.workspace = true
+
+# Web服务
+axum.workspace = true
+# 异步运行时
+tokio = { workspace = true, features = ["macros", "rt-multi-thread", "signal"] }
+# 日志
+tracing.workspace = true
+# uuid
+uuid.workspace = true
+# 配置
+config.workspace = true
+# 序列化
+serde = { workspace = true, features = ["derive"] }
+
+# auth
+auth = { workspace = true, optional = true, features = ["controller"] }
+# user
+user = { workspace = true, optional = true, features = ["controller"] }

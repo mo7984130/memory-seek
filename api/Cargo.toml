@@ -1,0 +1,32 @@
+[package]
+name = "memory-seek-api"
+version = "0.12.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+common-core.workspace = true
+type-core.workspace = true
+type-user.workspace = true
+
+# Http类型库
+http.workspace = true
+# Http 响应体
+http-body.workspace = true
+http-body-util.workspace = true
+# 字节类型
+bytes.workspace = true
+# 错误定义
+thiserror.workspace = true
+# 序列化
+serde.workspace = true
+# 异步运行时
+tokio.workspace = true
+# 效验
+validator.workspace = true
+
+# 序列化
+serde_json.workspace = true
+
+# 网络请求
+reqwest.workspace = true

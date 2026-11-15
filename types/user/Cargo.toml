@@ -1,0 +1,25 @@
+[package]
+name = "type-user"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+# 提供orm支持
+orm = ["dep:sea-orm", "type-core/orm", "dep:common-db", "dep:linkme"]
+
+[dependencies]
+common-core.workspace = true
+type-core.workspace = true
+common-db = { workspace = true, optional = true }
+# ORM, 提供orm支持
+sea-orm = { workspace = true, optional = true }
+# 序列化
+serde.workspace = true
+# 结构体效验
+validator = { workspace = true, features = ["derive"] }
+# 正则校验
+regex.workspace = true
+# 静态链接数组
+linkme = { workspace = true, optional = true }

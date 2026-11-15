@@ -1,0 +1,49 @@
+[package]
+name = "server"
+version = "2.15.3"
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+
+db = ["dep:sea-orm", "common-db", "common-core/orm"]
+redis = ["dep:redis", "dep:deadpool-redis", "common-core/redis"]
+email = ["dep:email_client"]
+token_cipher = ["dep:common-crypto"]
+multi_level_cache = ["dep:multi-level-cache"]
+s3_client = ["dep:s3-client"]
+
+[dependencies]
+common-core = { workspace = true, features = ["tokio"] }
+
+# db
+sea-orm = { workspace = true, optional = true, features = ["schema-sync", "entity-registry"] }
+common-db = { workspace = true, optional = true }
+
+# Redis
+deadpool-redis = { workspace = true, optional = true }
+redis = { workspace = true, optional = true }
+
+# email
+email_client = { workspace = true, optional = true }
+
+# token_cipher
+common-crypto = { workspace = true, optional = true }
+
+# multi_level_cache
+multi-level-cache = { workspace = true, optional = true }
+
+# s3_client
+s3-client = { workspace = true, optional = true, features = ["serde"] }
+
+
+# 日志
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+# 序列化
+serde = { workspace = true, features = ["derive"] }
+# 配置文件
+config.workspace = true
+# 异步运行时
+tokio = { workspace = true }

@@ -1,0 +1,31 @@
+[package]
+name = "e2e"
+version = "0.9.3"
+edition.workspace = true
+license.workspace = true
+
+
+[dependencies]
+common-core.workspace = true
+memory-seek-api.workspace = true
+type-user.workspace = true
+server = { workspace = true, features = ["redis"] }
+constant.workspace = true
+
+# 异步运行时
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
+# 网络请求
+reqwest.workspace = true
+# 日志
+tracing.workspace = true
+# 序列化
+serde = { workspace = true, features = ["derive"] }
+# Json序列化
+serde_json.workspace = true
+# 错误定义
+thiserror.workspace = true
+# uuid
+uuid.workspace = true
+short-uuid.workspace = true
+# 字节
+bytes.workspace = true

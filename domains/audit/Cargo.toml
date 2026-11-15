@@ -1,0 +1,11 @@
+[package]
+name = "audit"
+version = "0.6.1"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+common-core = { workspace = true, features = ["orm"] }
+type-audit =  { workspace = true, features = ["orm"] }
+# ORM
+sea-orm.workspace = true

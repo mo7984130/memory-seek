@@ -1,0 +1,15 @@
+[package]
+name = "media_validator"
+version = "0.4.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+# 图片处理
+image.workspace = true
+# 元信息读取
+nom-exif.workspace = true
+# 错误处理
+thiserror.workspace = true
+# 字节
+bytes.workspace = true

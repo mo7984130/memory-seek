@@ -1,0 +1,17 @@
+[package]
+name = "share"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+common-core.workspace = true
+type-core.workspace = true
+common-crypto.workspace = true
+
+# 序列化
+serde.workspace = true
+# 二进制
+postcard.workspace = true
+# 编码
+base64.workspace = true

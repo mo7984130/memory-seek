@@ -1,0 +1,21 @@
+[package]
+name = "email_client"
+version = "0.3.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+# 邮件
+lettre = { workspace = true, default-features = false, features = [
+    "tokio1-rustls",   # 加密
+    "ring",            # 加密后端
+    "smtp-transport",  # 邮件发送
+    "hostname",        # 显式主机名
+    "builder",         # Builder创建
+    "webpki-roots"     # 证书集合
+] }
+# common
+# 使用ContextualError
+common-core.workspace = true
+# 序列化
+serde.workspace = true

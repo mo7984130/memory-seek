@@ -1,0 +1,20 @@
+[package]
+name = "type-audit"
+version = "0.2.0"
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+orm = ["dep:common-db", "dep:linkme", "dep:sea-orm", "type-core/orm"]
+
+[dependencies]
+common-core.workspace = true
+type-core.workspace = true
+# Detail序列化
+serde_json.workspace = true
+# ORM支持
+sea-orm = { workspace = true, optional = true }
+common-db = { workspace = true, optional = true }
+# 静态链接数组
+linkme = { workspace = true, optional = true }

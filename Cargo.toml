@@ -1,0 +1,136 @@
+[workspace]
+resolver = "3"
+members = [
+    "common/core",
+    "common/db",
+    "common/crypto",
+    "common/web",
+    "types/core",
+    "types/audit",
+    "types/user",
+    "libs/email_client",
+    "libs/media_validator",
+    "libs/s3_client",
+    "domains/constant",
+    "domains/share",
+    "domains/audit",
+    "domains/auth",
+    "domains/user",
+    "tests/e2e",
+    "api",
+    "server/server",
+    "server/web_server",
+    "server/cli"
+]
+
+[workspace.package]
+edition = "2024"
+license = "MIT OR Apache-2.0"
+
+[profile.release]
+opt-level = 3
+debug = false
+strip = "symbols"
+debug-assertions = false
+overflow-checks = false
+lto = "thin"
+panic = "abort"
+codegen-units = 1
+rpath = false
+
+[workspace.dependencies]
+common-core.path = "common/core"
+common-db.path = "common/db"
+common-crypto.path = "common/crypto"
+common-web.path = "common/web"
+type-core.path = "types/core"
+type-audit.path = "types/audit"
+type-user.path = "types/user"
+email_client.path = "libs/email_client"
+media_validator.path = "libs/media_validator"
+s3-client.path = "libs/s3_client"
+constant.path = "domains/constant"
+share.path = "domains/share"
+audit.path = "domains/audit"
+auth.path = "domains/auth"
+user.path = "domains/user"
+server.path = "server/server"
+memory-seek-api.path = "api"
+
+
+# 时间
+chrono = "0.4.45"
+# 序列化
+serde = "1.0.229"
+# Json
+serde_json = "1.0.154"
+# 二进制
+postcard = { version = "1.1.3", features = ["alloc"] }
+# 编码
+base64 = "0.23.1"
+# Web
+axum = "0.8.9"
+# 日志
+tracing = "0.1.44"
+tracing-subscriber = "0.3.23"
+# ORM
+sea-orm = { version = "2.0.4", features = ["sqlx-postgres", "runtime-tokio-rustls"] }
+# Redis
+redis = "1.8.1"
+# Redis 连接池
+deadpool-redis = "0.23.1"
+# 错误处理
+thiserror = "2.0.21"
+# 更多Derive
+derive_more = "2.1.1"
+# 异步运行时
+tokio = "1.54.1"
+# 配置文件
+config = "0.15.27"
+# Http相关类型
+http = "1.5.0"
+# Http 响应体
+http-body = "1.1.0"
+http-body-util = "0.1.5"
+# 字节
+bytes = "1.12.1"
+# 网络请求
+reqwest = "0.13.5"
+# 终端密码输入
+rpassword = "7.5.5"
+# 静态链接数组
+linkme = "0.3.38"
+# UUid
+uuid = { version = "1.29.2", features = ["v4"] }
+short-uuid = "0.2.1"
+# 流式future
+futures = "0.3.34"
+
+# 邮件
+lettre = "0.11.23"
+# 命令行解析
+clap = "4.6.7"
+# OSS S3 api
+rust-s3 = "0.38.0"
+
+# 图片处理
+image = "0.25.10"
+# 元信息读取
+nom-exif = "3.8.0"
+
+# common-crypto 加密相关
+hkdf = "0.13.0"
+sha2 = "0.11.1"
+aes-siv = "0.8.0"
+password-hash = "0.6.1"
+bcrypt = "0.19.3"
+argon2 = "0.6.0"
+rand = "0.10.3"
+hex = "0.4.3"
+
+# 三级缓存
+multi-level-cache = { version = "0.1.6", features = ["redis-deadpool"] }
+# 结构体效验
+validator = "0.21.0"
+# 正则校验
+regex = "1.13.1"

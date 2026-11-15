@@ -1,0 +1,49 @@
+# 英语词典
+dictionaries = ["en_us"]
+
+# 自定义允许的单词
+words = [
+    "tokio",
+    "sqlx",
+    "serde",
+    "reqwest",
+    "linkme",
+    "rpassword",
+    "mailhog",
+    "setval",
+
+    "HKDF",
+    "matroska",
+    "ISOBMFF",
+    # AES-SIV
+    "SIV",
+    "rustls",
+    # webpki-roots
+    "webpki",
+    # deadpool-redis
+    "deadpool",
+    "STARTTLS",
+
+    "DRIFTC",
+
+    "inviter",
+    "Suc"
+]
+
+# 包含整个 workspace 的源代码
+include_paths = [
+    "**/*.rs",
+    "**/*.md",
+    "**/*.toml",
+]
+
+# 排除构建产物、锁文件和 Git 文件
+ignore_paths = [
+    "**/target/**",
+    "**/Cargo.lock",
+    "**/.git/**",
+]
+
+ignore_patterns = [
+    '[\u4e00-\u9fff]',
+]

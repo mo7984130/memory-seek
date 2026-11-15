@@ -1,0 +1,19 @@
+[package]
+name = "common-web"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+common-core = { workspace = true, features = ["axum", "validator"] }
+type-core.workspace = true
+
+# Web
+axum.workspace = true
+# 效验器
+validator.workspace = true
+# 序列化
+serde.workspace = true
+serde_json.workspace = true
+# 日志
+tracing.workspace = true

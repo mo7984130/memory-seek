@@ -1,0 +1,70 @@
+use std::{str::FromStr, sync::Arc};
+
+use axum::{extract::Request, middleware::Next, response::Response};
+use common_core::{
+    contextual::{ContextualError, ext::IntoContextualExt},
+    ext::{boolean::TrueOrExt, redis::RedisExt},
+};
+use common_web::web_error::WebError;
+use server::state::AppState;
+use type_core::UserId;
+
+/// 认证中间件：从 Authorization 头解析凭据校验后将 `UserId` 注入请求扩展
+#[tracing::instrument(skip_all)]
+pub async fn auth_middleware(
+    axum::extract::State(state): axum::extract::State<Arc<AppState>>,
+    mut request: Request,
+    next: Next,
+) -> Result<Response, WebError> {
+    // 从 Authorization header 中提取 Bearer user_id access_token
+    let (user_id, token) = extract_bearer(&request)?;
+
+    // 验证 token 是否是该 user_id 的有效 token
+    verify_token(&state, user_id, token)
+        .await?
+        .true_or(WebError::unauthorized("AccessToken无效"))?;
+
+    // 将 user_id 注入到请求扩展中
+    request.extensions_mut().insert(user_id);
+
+    Ok(next.run(request).await)
+}
+
+/// 从 Authorization 头解析 `Bearer user_id access_token` 格式的凭据
+fn extract_bearer(request: &Request) -> Result<(UserId, &str), WebError> {
+    let header = request
+        .headers()
+        .get("Authorization")
+        .and_then(|v| v.to_str().ok())
+        .ok_or(WebError::unauthorized("无效的认证头"))?;
+
+    let content = header
+        .strip_prefix("Bearer ")
+        .ok_or(WebError::unauthorized("无效的认证头"))?;
+
+    let (user_id_str, token) = content
+        .split_once(' ')
+        .ok_or(WebError::unauthorized("无效的认证头"))?;
+
+    let user_id =
+        UserId::from_str(user_id_str).map_err(|_| WebError::unauthorized("无效的UserId"))?;
+
+    Ok((user_id, token))
+}
+
+/// 校验 token 是否为该 `UserId` 在 Redis 中记录的有效令牌
+async fn verify_token(
+    state: &AppState,
+    user_id: UserId,
+    token: &str,
+) -> Result<bool, ContextualError> {
+    use constant::RedisKeys;
+
+    let key = RedisKeys::auth::user_access_token(user_id);
+    let stored_token: Option<String> = state.redis.get_as(&key).await.into_contextual()?;
+
+    match stored_token {
+        Some(stored) => Ok(stored == token),
+        _ => Ok(false),
+    }
+}

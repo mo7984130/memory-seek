@@ -1,0 +1,40 @@
+[package]
+version = "0.3.4"
+name = "auth"
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+controller = ["dep:axum", "dep:common-web"]
+
+[dependencies]
+common-core = { workspace = true, features = ["orm", "redis", "tokio", "validator", "multi-level-cache"] }
+common-web = { workspace = true, optional = true }
+common-db.workspace = true
+common-crypto = { workspace = true, features = ["tokio"] }
+type-core.workspace = true
+type-user = { workspace = true, features = ["orm"] }
+constant.workspace = true
+audit.workspace = true
+share.workspace = true
+# ORM
+sea-orm.workspace = true
+# Redis
+redis.workspace = true
+deadpool-redis.workspace = true
+# 日志
+tracing.workspace = true
+# 邮件
+email_client.workspace = true
+# 异步运行时
+tokio.workspace = true
+# 三级缓存
+multi-level-cache.workspace = true
+# 效验器
+validator.workspace = true
+# 错误定义
+thiserror.workspace = true
+
+# controller
+axum = { workspace = true, optional = true, features = ["macros"] }

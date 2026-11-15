@@ -1,0 +1,44 @@
+[package]
+name = "common-core"
+version = "0.5.0"
+edition.workspace = true
+license.workspace = true
+
+[features]
+default = []
+# ORM错误转化
+orm = ["dep:sea-orm"]
+# tokio错误转化
+tokio = ["dep:tokio"]
+# Redis错误转化
+redis = ["dep:redis", "dep:deadpool-redis"]
+# web相关
+axum = ["dep:axum"]
+# 效验器错误转化
+validator = ["dep:validator"]
+# 多级缓存错误转换
+multi-level-cache = ["dep:multi-level-cache"]
+
+
+[dependencies]
+# 时间
+chrono = { workspace = true, features = ["serde"] }
+# 日志
+tracing.workspace = true
+# 序列化
+serde = { workspace = true, features = ["derive"] }
+
+# ORM错误转化
+sea-orm = { workspace = true, optional = true }
+# tokio错误转化
+tokio = { workspace = true, optional = true, features = ["sync", "rt"]  }
+# Redis错误转化
+redis = { workspace = true, optional = true }
+deadpool-redis = { workspace = true, optional = true }
+
+# Web
+axum = { workspace = true, optional = true }
+# 效验器错误转化
+validator = { workspace = true, optional = true }
+# 多级缓存错误转换
+multi-level-cache = { workspace = true, optional = true }
