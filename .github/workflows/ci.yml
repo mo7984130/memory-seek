@@ -31,6 +31,27 @@ jobs:
               components: rustfmt
           - run : cargo fmt --all -- --check
 
+    spell:
+        name: spell
+        runs-on: ubuntu-22.04
+        steps:
+          - uses: actions/checkout@v5
+          - name: Cache codebook
+            id: codebook-cache
+            uses: actions/cache@v5
+            with:
+              path: |
+                ~/.cargo/bin/codebook-lsp
+                ~/.cache/codebook
+                ~/.local/share/codebook
+              key: codebook-lsp-0.4.0-${{ runner.os }}
+          - uses: cargo-bins/cargo-binstall@main
+            if: steps.codebook-cache.outputs.cache-hit != 'true'
+          - name: Install codebook
+            if: steps.codebook-cache.outputs.cache-hit != 'true'
+            run: cargo binstall -y codebook-lsp@0.4.0 || cargo install --locked codebook-lsp@0.4.0
+          - run: codebook-lsp lint --unique .
+
     clippy:
         name: clippy
         runs-on: ubuntu-22.04
