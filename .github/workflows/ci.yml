@@ -64,6 +64,7 @@ jobs:
           - uses: Swatinem/rust-cache@v2
             with:
               shared-key: ci
+              save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
           - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
     test:
@@ -77,4 +78,22 @@ jobs:
           - uses: Swatinem/rust-cache@v2
             with:
               shared-key: ci
+              save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
           - run: cargo test --locked --workspace --all-features --no-fail-fast
+
+    features:
+        name: features
+        runs-on: ubuntu-22.04
+        steps:
+            - uses: actions/checkout@v5
+            - uses: dtolnay/rust-toolchain@master
+              with:
+                toolchain: "1.100.0"
+            - uses: Swatinem/rust-cache@v2
+              with:
+                shared-key: ci
+                save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
+            - uses: taiki-e/install-action@v2
+              with:
+                tool: cargo-hack@0.6.45
+            - run: bash scripts/check-features.sh --depth 2
