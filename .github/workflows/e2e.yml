@@ -1,0 +1,96 @@
+name: E2E
+
+on:
+    pull_request:
+        branches: [main, dev]
+    push:
+        branches: [main, dev]
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: e2e-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
+  MEMORY_SEEK_CONFIG_PATH: ${{ github.workspace }}/tests/run/config.yml
+  E2E_BASE_URL: http://127.0.0.1:7984
+
+jobs:
+  e2e:
+    name: e2e
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.100.0"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: e2e
+          save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
+
+      - name: Start service stack
+        run: |
+          docker compose -f tests/run/docker-compose.yml down -v
+          docker compose -f tests/run/docker-compose.yml up -d
+
+          for port in 54329 63799 1025 9009; do
+            echo "waiting for port $port"
+            timeout 90 bash -c "until (echo > /dev/tcp/127.0.0.1/$port) 2>/dev/null; do sleep 1; done"
+          done
+
+          timeout 120 docker compose -f tests/run/docker-compose.yml exec -T postgres \
+            pg_isready -U memory_seek_test -d memory_seek_test
+
+          timeout 60 docker compose -f tests/run/docker-compose.yml exec -T valkey \
+            valkey-cli ping
+
+          timeout 120 docker compose -f tests/run/docker-compose.yml wait rustfs-init
+          docker compose -f tests/run/docker-compose.yml logs rustfs-init
+
+      - name: Build web server
+        run: cargo build --locked -p web-server --features auth,user
+
+      - name: Start web server
+        run: |
+          ./target/debug/web-server > /tmp/web-server.log 2>&1 &
+          echo $! > /tmp/web-server.pid
+
+      - name: Wait for health
+        run: |
+          curl --fail --retry 60 --retry-connrefused --retry-delay 1 \
+            http://127.0.0.1:7984/health
+
+      - name: Run e2e
+        run: cargo run --locked -p e2e
+
+      - name: Collect logs
+        if: always()
+        run: |
+          kill "$(cat /tmp/web-server.pid)" 2>/dev/null || true
+          docker compose -f tests/run/docker-compose.yml logs --no-color \
+            > /tmp/compose.log 2>&1 || true
+          cat /tmp/web-server.log || true
+          cat /tmp/compose.log || true
+
+      - name: Upload logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-logs
+          path: |
+            /tmp/web-server.log
+            /tmp/compose.log
+          if-no-files-found: ignore
+
+      - name: Stop service stack
+        if: always()
+        run: docker compose -f tests/run/docker-compose.yml down -v
