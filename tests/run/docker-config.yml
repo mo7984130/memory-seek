@@ -1,0 +1,24 @@
+database:
+  url: "postgres://memory_seek_test:memory_seek_test@localhost:54329/memory_seek_test"
+redis:
+  url: "redis://127.0.0.1:63799"
+email:
+  server: "localhost"
+  port: 1025
+  # MailHog 不支持 TLS, 明文传输
+  plain: true
+  username: ""
+  password: ""
+  from_email: "noreply@example.com"
+  from_name: "MemorySeek"
+token_cipher:
+  key: "test"
+  salt: "test"
+s3_client:
+  endpoint: "http://localhost:9009"
+  bucket: "memory-seek-test"
+  access_key: "memory_seek_test"
+  secret_key: "memory_seek_test"
+  region: "us-east-1"
+  # rustfs 需 path-style 寻址(否则客户端按 virtual-host 拼接 bucket 子域)
+  force_path_style: true
