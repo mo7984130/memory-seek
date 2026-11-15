@@ -16,7 +16,7 @@ concurrency:
 
 env:
     CARGO_TERM_COLOR: always
-    CARGO_INCREMNTAL: 0
+    CARGO_INCREMENTAL: 0
     RUST_BACKTRACE: 1
 
 jobs:
@@ -24,9 +24,23 @@ jobs:
         name: fmt
         runs-on: ubuntu-22.04
         steps:
-          - uses: actions/checkout@v4
+          - uses: actions/checkout@v5
           - uses: dtolnay/rust-toolchain@master
             with:
               toolchain: "1.100.0"
               components: rustfmt
           - run : cargo fmt --all -- --check
+
+    clippy:
+        name: clippy
+        runs-on: ubuntu-22.04
+        steps:
+          - uses: actions/checkout@v5
+          - uses: dtolnay/rust-toolchain@master
+            with:
+              toolchain: "1.100.0"
+              components: clippy
+          - uses: Swatinem/rust-cache@v2
+            with:
+              shared-key: ci
+          - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
