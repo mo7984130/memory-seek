@@ -16,7 +16,7 @@ impl<T: Transport, S: Storage> ApiClient<T, S> {
 
     pub async fn send_email_code(&self, req: SendEmailRequest) -> Result<()> {
         req.validate()?;
-        self.post("/auth/email-code", req).await
+        self.post_no_auth("/auth/email-code", req).await
     }
 
     pub async fn login(&self, req: LoginRequest) -> Result<LoginResponse> {
