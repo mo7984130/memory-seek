@@ -1,11 +1,7 @@
-use common_core::{
-    contextual::ext::ContextualOptionExt,
-    ext::{println_ext::DebugExt, redis::RedisExt},
-};
+use common_core::{contextual::ext::ContextualOptionExt, ext::redis::RedisExt};
 use server::state::AppState;
 use short_uuid::ShortUuid;
 use tracing::info;
-use type_user::{LoginRequest, RegisterRequest};
 
 use crate::{ApiClient, error::E2eError};
 
