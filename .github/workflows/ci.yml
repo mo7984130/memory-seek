@@ -63,7 +63,7 @@ jobs:
               components: clippy
           - uses: Swatinem/rust-cache@v2
             with:
-              shared-key: ci
+              shared-key: rust-debug
               save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
           - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
@@ -77,7 +77,7 @@ jobs:
               toolchain: "1.100.0"
           - uses: Swatinem/rust-cache@v2
             with:
-              shared-key: ci
+              shared-key: rust-debug
               save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
           - run: cargo test --locked --workspace --all-features --no-fail-fast
 
@@ -91,7 +91,7 @@ jobs:
                 toolchain: "1.100.0"
             - uses: Swatinem/rust-cache@v2
               with:
-                shared-key: ci
+                shared-key: rust-debug
                 save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
             - uses: taiki-e/install-action@v2
               with:

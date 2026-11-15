@@ -34,7 +34,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          shared-key: e2e
+          shared-key: rust-debug
           save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
 
       - name: Start service stack
