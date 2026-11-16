@@ -50,7 +50,7 @@ jobs:
             docker compose -f tests/run/docker-compose.yml wait rustfs-init
 
       - name: Build web server
-        run: cargo build --locked -p web-server --features auth,user
+        run: cargo build --locked -p web-server --features auth
 
       - name: Start web server
         run: |
