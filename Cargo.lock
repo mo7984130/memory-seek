@@ -163,6 +163,25 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
+name = "api"
+version = "0.12.0"
+dependencies = [
+ "bytes",
+ "common-core",
+ "http",
+ "http-body",
+ "http-body-util",
+ "reqwest 0.13.5",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tokio",
+ "type-auth",
+ "type-core",
+ "validator",
+]
+
+[[package]]
 name = "approx"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1589,10 +1608,10 @@ checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
 name = "e2e"
 version = "0.9.3"
 dependencies = [
+ "api",
  "bytes",
  "common-core",
  "constant",
- "memory-seek-api",
  "reqwest 0.13.5",
  "serde",
  "serde_json",
@@ -2910,25 +2929,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "488016bfae457b036d996092f6cb448677611ce4449e970ceaf42695203f218a"
 dependencies = [
  "autocfg",
-]
-
-[[package]]
-name = "memory-seek-api"
-version = "0.12.0"
-dependencies = [
- "bytes",
- "common-core",
- "http",
- "http-body",
- "http-body-util",
- "reqwest 0.13.5",
- "serde",
- "serde_json",
- "thiserror",
- "tokio",
- "type-auth",
- "type-core",
- "validator",
 ]
 
 [[package]]

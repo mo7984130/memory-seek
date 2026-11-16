@@ -1,26 +1,28 @@
 [workspace]
 resolver = "3"
 members = [
-    "common/core",
-    "common/db",
-    "common/crypto",
-    "common/web",
-    "common/tokio",
-    "types/core",
-    "types/audit",
-    "types/auth",
-    "libs/email_client",
-    "libs/media_validator",
-    "libs/s3_client",
-    "domains/constant",
-    "domains/share",
-    "domains/audit",
-    "domains/auth",
+    "common/common/core",
+    "common/common/db",
+    "common/common/crypto",
+    "common/common/web",
+    "common/common/tokio",
+    "common/types/core",
+    "common/types/audit",
+    "common/types/auth",
+    "common/api",
+
+    "backend/libs/email_client",
+    "backend/libs/media_validator",
+    "backend/libs/s3_client",
+    "backend/domains/constant",
+    "backend/domains/share",
+    "backend/domains/audit",
+    "backend/domains/auth",
+    "backend/server/server",
+    "backend/server/web_server",
+    "backend/server/cli",
+
     "tests/e2e",
-    "api",
-    "server/server",
-    "server/web_server",
-    "server/cli"
 ]
 
 [workspace.package]
@@ -39,22 +41,25 @@ codegen-units = 1
 rpath = false
 
 [workspace.dependencies]
-common-core.path = "common/core"
-common-db.path = "common/db"
-common-crypto.path = "common/crypto"
-common-web.path = "common/web"
-type-core.path = "types/core"
-type-audit.path = "types/audit"
-type-auth.path = "types/auth"
-email_client.path = "libs/email_client"
-media_validator.path = "libs/media_validator"
-s3-client.path = "libs/s3_client"
-constant.path = "domains/constant"
-share.path = "domains/share"
-audit.path = "domains/audit"
-auth.path = "domains/auth"
-server.path = "server/server"
-memory-seek-api.path = "api"
+common-core.path = "common/common/core"
+common-db.path = "common/common/db"
+common-crypto.path = "common/common/crypto"
+common-web.path = "common/common/web"
+# common-tokio.path = "common/common/tokio"
+
+type-core.path = "common/types/core"
+type-audit.path = "common/types/audit"
+type-auth.path = "common/types/auth"
+api.path = "common/api"
+
+email_client.path = "backend/libs/email_client"
+media_validator.path = "backend/libs/media_validator"
+s3-client.path = "backend/libs/s3_client"
+constant.path = "backend/domains/constant"
+share.path = "backend/domains/share"
+audit.path = "backend/domains/audit"
+auth.path = "backend/domains/auth"
+server.path = "backend/server/server"
 
 
 # 时间

@@ -1,5 +1,5 @@
+use api::client::ApiError;
 use common_core::contextual::ContextualError;
-use memory_seek_api::client::ApiError;
 
 #[derive(Debug, thiserror::Error)]
 pub enum E2eError {
