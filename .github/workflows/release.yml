@@ -26,9 +26,9 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: dtolnay/rust-toolchain@master
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
         with:
-          toolchain: "1.100.0"
+          cache: false
 
       - uses: Swatinem/rust-cache@v2
         with:

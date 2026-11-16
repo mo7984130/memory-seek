@@ -6,103 +6,114 @@ on:
   workflow_dispatch:
 
 permissions:
-    contents: read
+  contents: read
 
 concurrency:
-    group: ci-${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: true
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 env:
-    CARGO_TERM_COLOR: always
-    CARGO_INCREMENTAL: 0
-    RUST_BACKTRACE: 1
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+  RUST_BACKTRACE: 1
 
 jobs:
-    fmt:
-        name: fmt
-        runs-on: ubuntu-22.04
-        steps:
-          - uses: actions/checkout@v5
-          - uses: dtolnay/rust-toolchain@master
-            with:
-              toolchain: "1.100.0"
-              components: rustfmt
-          - run : cargo fmt --all -- --check
+  fmt:
+    name: fmt
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          cache: false
+      - run: cargo fmt --all -- --check
 
-    spell:
-        name: spell
-        runs-on: ubuntu-22.04
-        steps:
-          - uses: actions/checkout@v5
-          - name: Cache codebook
-            id: codebook-cache
-            uses: actions/cache@v5
-            with:
-              path: |
-                ~/.cargo/bin/codebook-lsp
-                ~/.cache/codebook
-                ~/.local/share/codebook
-              key: codebook-lsp-0.4.0-${{ runner.os }}
-          - uses: cargo-bins/cargo-binstall@main
-            if: steps.codebook-cache.outputs.cache-hit != 'true'
-          - name: Install codebook
-            if: steps.codebook-cache.outputs.cache-hit != 'true'
-            run: cargo binstall -y codebook-lsp@0.4.0 || cargo install --locked codebook-lsp@0.4.0
-          - run: codebook-lsp lint --unique .
+  spell:
+    name: spell
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          cache: false
+      - name: Read tool versions
+        id: versions
+        run: |
+          source scripts/common.sh
+          echo "codebook=$CODEBOOK_VERSION" >> "$GITHUB_OUTPUT"
+      - name: Cache codebook
+        id: codebook-cache
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/bin/codebook-lsp
+            ~/.cache/codebook
+            ~/.local/share/codebook
+          key: codebook-lsp-${{ steps.versions.outputs.codebook }}-${{ runner.os }}
+      - uses: cargo-bins/cargo-binstall@main
+        if: steps.codebook-cache.outputs.cache-hit != 'true'
+      - name: Install codebook
+        if: steps.codebook-cache.outputs.cache-hit != 'true'
+        run: |
+          source scripts/common.sh
+          cargo binstall -y "codebook-lsp@$CODEBOOK_VERSION" \
+              || cargo install --locked "codebook-lsp@$CODEBOOK_VERSION"
+      - run: codebook-lsp lint --unique .
 
-    clippy:
-        name: clippy
-        runs-on: ubuntu-22.04
-        steps:
-          - uses: actions/checkout@v5
-          - uses: dtolnay/rust-toolchain@master
-            with:
-              toolchain: "1.100.0"
-              components: clippy
-          - uses: Swatinem/rust-cache@v2
-            with:
-              shared-key: rust-debug
-              save-if: ${{ github.event_name == 'pull_request' }}
-          - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
+  clippy:
+    name: clippy
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          cache: false
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust-debug
+      - run: cargo clippy --locked --workspace --all-targets --all-features -- -D warnings
 
-    test:
-        name: test
-        runs-on: ubuntu-22.04
-        steps:
-          - uses: actions/checkout@v5
-          - uses: dtolnay/rust-toolchain@master
-            with:
-              toolchain: "1.100.0"
-          - uses: Swatinem/rust-cache@v2
-            with:
-              shared-key: rust-debug
-              save-if: ${{ github.event_name == 'pull_request' }}
-          - run: cargo test --locked --workspace --all-features --no-fail-fast
+  test:
+    name: test
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          cache: false
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust-debug
+      - run: cargo test --locked --workspace --all-features --no-fail-fast
 
-    features:
-        name: features
-        runs-on: ubuntu-22.04
-        steps:
-            - uses: actions/checkout@v5
-            - uses: dtolnay/rust-toolchain@master
-              with:
-                toolchain: "1.100.0"
-            - uses: Swatinem/rust-cache@v2
-              with:
-                shared-key: rust-debug
-                save-if: ${{ github.event_name == 'pull_request' }}
-            - uses: taiki-e/install-action@v2
-              with:
-                tool: cargo-hack@0.6.45
-            - name: Install sccache
-              uses: mozilla-actions/sccache-action@v0.0.10
-            - name: Enable sccache
-              run: |
-                echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
-                echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
-            - name: Check features (depth 2)
-              run: bash scripts/check-features.sh --depth 2
+  features:
+    name: features
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions-rust-lang/setup-rust-toolchain@v2
+        with:
+          cache: false
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: rust-debug
+      - name: Read tool versions
+        id: versions
+        run: |
+          source scripts/common.sh
+          echo "cargo_hack=$CARGO_HACK_VERSION" >> "$GITHUB_OUTPUT"
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: cargo-hack@${{ steps.versions.outputs.cargo_hack }}
+      - name: Install sccache
+        uses: mozilla-actions/sccache-action@v0.0.10
+      - name: Enable sccache
+        run: |
+          echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
+          echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
+      - name: Check features (depth 2)
+        run: bash scripts/check-features.sh --depth 2
 
-            - name: Show sccache stats
-              if: always()
-              run: sccache --show-stats
+      - name: Show sccache stats
+        if: always()
+        run: sccache --show-stats
