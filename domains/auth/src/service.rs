@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use audit::recorder::AuditRecorder;
 use audit::{AuditActor, AuditEvent};
+use bytes::Bytes;
 use common_core::contextual::ContextualError;
 use common_core::ext::boolean::TrueOrExt;
 use common_core::ext::redis::RedisExt;
@@ -17,19 +18,22 @@ use common_crypto::{
 };
 use common_db::db_transaction;
 use constant::{AuditEventTypes, RedisKeys};
+use media_validator::{MediaMetadata, MediaValidator};
 use sea_orm::DatabaseConnection;
 use share::visual_token::VisualToken;
 use tokio::task;
-use type_core::UserId;
-use type_user::{
-    CreateAdminArgs, LoginRequest, LoginResponse, RefreshAccessTokenResponse, RegisterRequest,
-    SendEmailRequest, UserInfo,
+use type_auth::{
+    CreateAdminArgs, InviterCodeResponse, LoginRequest, LoginResponse, RefreshAccessTokenResponse,
+    RegisterRequest, SendEmailRequest, UpdateNicknameRequest, UserInfo,
 };
+use type_core::UserId;
+use type_core::viusal::VisualTokenStr;
 use validator::Validate;
 
 use crate::constant::{
     ACCESS_TOKEN_LEN, ACCESS_TOKEN_REFRESH_TTL, ACCESS_TOKEN_TTL, EMAIL_CODE_EXPIRATION,
-    EMAIL_CODE_LEN, REFRESH_TOKEN_LEN, REFRESH_TOKEN_TTL,
+    EMAIL_CODE_LEN, GENERATE_INVITER_CODE_MAX_RETRY, INVITER_CODE_LEN, INVITER_CODE_TTL,
+    REFRESH_TOKEN_LEN, REFRESH_TOKEN_TTL,
 };
 use crate::error::AuthError;
 use crate::mapper::{AuthInsertParam, AuthInsertResult};
@@ -39,6 +43,38 @@ pub struct AuthService;
 
 // 创建
 impl AuthService {
+    pub async fn generate_inviter_code(
+        state: Arc<AuthState>,
+        user_id: UserId,
+    ) -> Result<InviterCodeResponse, AuthError> {
+        // 循环生成邀请码, 防止冲突
+        // 最大生成次数为3
+        let mut conn = state.redis.get().await.into_contextual()?;
+        for _ in 0..GENERATE_INVITER_CODE_MAX_RETRY {
+            let code: String = rand_util::generate_random_uppercase_str(INVITER_CODE_LEN);
+            let key = RedisKeys::auth::inviter_code(&code);
+
+            let success: bool = redis::cmd("SET")
+                .arg(&key)
+                .arg(user_id.0)
+                .arg("EX")
+                .arg(INVITER_CODE_TTL.as_secs())
+                .arg("NX")
+                .query_async(&mut conn)
+                .await
+                .into_contextual()?;
+
+            if success {
+                return Ok(InviterCodeResponse {
+                    inviter_code: code,
+                    expire_at: time::now_after(INVITER_CODE_TTL),
+                });
+            }
+        }
+
+        Err(AuthError::InviterCodeGenerateExhausted)
+    }
+
     /// 注册
     #[tracing::instrument(
         skip_all,
@@ -81,7 +117,7 @@ impl AuthService {
                 .await?;
             };
 
-            Ok::<_, ContextualError>(result)
+            Ok::<_, AuthError>(result)
         })
         .await?;
 
@@ -283,7 +319,7 @@ impl AuthService {
             )
             .await?;
 
-            Ok::<_, ContextualError>(user)
+            Ok::<_, AuthError>(user)
         })
         .await?;
 
@@ -374,16 +410,114 @@ impl AuthService {
         state: &AuthState,
         user_id: UserId,
         refresh_token: &str,
-    ) -> Result<bool, ContextualError> {
+    ) -> Result<bool, AuthError> {
         match state.repo.get_refresh_token(user_id).await? {
             None => Ok(false),
             Some(token) => Ok(token == refresh_token),
         }
     }
+
+    #[tracing::instrument(
+        skip_all,
+        fields(
+            user_id = %user_id,
+            new_nickname = %req.new_nickname
+        )
+    )]
+    pub async fn update_nickname(
+        state: Arc<AuthState>,
+        user_id: UserId,
+        req: UpdateNicknameRequest,
+    ) -> Result<(), AuthError> {
+        state
+            .repo
+            .update_nickname(user_id, req.new_nickname)
+            .await?;
+        Ok(())
+    }
+
+    #[tracing::instrument(
+            skip_all,
+            fields(
+                user_id = %user_id
+            )
+        )]
+    pub async fn upload_avatar(
+        state: Arc<AuthState>,
+        user_id: UserId,
+        avatar: Bytes,
+    ) -> Result<VisualTokenStr, AuthError> {
+        // 效验图片
+        let metadata = MediaValidator::validate_image(avatar.clone())?;
+
+        // 上传图片
+        let avatar_key = Self::avatar_file_id(user_id, &metadata);
+        state
+            .s3_client
+            .upload(&avatar_key, &avatar, metadata.kind.mime_type())
+            .await
+            .into_contextual()?;
+
+        // 更新数据库
+        // 如果失败的话, 删除刚才上传的文件
+        let old_key = state
+            .repo
+            .update_avatar(user_id, avatar_key.clone())
+            .await
+            .inspect_err_async(|_| async {
+                state
+                    .s3_client
+                    .delete(&avatar_key)
+                    .await
+                    .into_contextual()
+                    .emit_if_err();
+            })
+            .await?;
+
+        // 删除旧头像
+        // 错误不返回
+        if let Some(old_key) = old_key {
+            state
+                .s3_client
+                .delete(old_key)
+                .await
+                .into_contextual()
+                .emit_if_err();
+        }
+
+        // 生成头像token
+        VisualToken::image_thumbnail(avatar_key, user_id)
+            .encrypt(&state.token_cipher)
+            .map_err(AuthError::from)
+    }
 }
 
 // 查询
-impl AuthService {}
+impl AuthService {
+    #[tracing::instrument(skip_all, fields(
+        user_id = %user_id
+    ))]
+    pub async fn get_user_self_info(
+        state: Arc<AuthState>,
+        user_id: UserId,
+    ) -> Result<UserInfo, AuthError> {
+        match state.repo.get_user_self_info(user_id).await? {
+            Some(info) => Ok(info),
+            None => Err(AuthError::UserNotFound),
+        }
+    }
+}
 
 // 删除
 impl AuthService {}
+
+impl AuthService {
+    fn avatar_file_id(user_id: UserId, metadata: &MediaMetadata) -> String {
+        format!(
+            "avatars/{}/{}.{}",
+            user_id,
+            uuid::Uuid::new_v4().simple(),
+            metadata.kind.ext()
+        )
+    }
+}

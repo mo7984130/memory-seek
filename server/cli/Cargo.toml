@@ -8,7 +8,7 @@ license.workspace = true
 common-core.workspace = true
 server = { workspace = true, features = ["db"] }
 auth.workspace = true
-type-user.workspace = true
+type-auth.workspace = true
 
 # 异步运行时
 tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }

@@ -9,12 +9,12 @@ services:
         ports:
             - "54329:5432"
         tmpfs:
-            - /var/lib/postgres/data
+            - /var/lib/postgresql/data
         healthcheck:
             test: ["CMD-SHELL", "pg_isready -U memory_seek_test -d memory_seek_test"]
             interval: 1s
             timeout: 3s
-            retries: 10
+            retries: 60
 
     valkey:
         image: valkey/valkey:8-alpine
@@ -24,6 +24,11 @@ services:
             - "63799:6379"
         tmpfs:
             - /data
+        healthcheck:
+            test: ["CMD", "valkey-cli", "ping"]
+            interval: 1s
+            timeout: 3s
+            retries: 30
 
     mailhog:
         image: mailhog/mailhog:latest

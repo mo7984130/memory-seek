@@ -1,4 +1,6 @@
-use common_core::contextual::{ContextualError, Result};
+use crate::error::Result;
+use common_core::contextual::ContextualError;
+use common_core::contextual::ext::IntoContextualExt;
 use common_core::ext::result::ToOkExt;
 use common_core::time::{self, DateTime};
 use sea_orm::ActiveValue::{NotSet, Set};
@@ -7,8 +9,10 @@ use sea_orm::{
     ColumnTrait, Condition, ConnectionTrait, EntityTrait, FromQueryResult, QueryFilter,
     QuerySelect, sea_query::Expr,
 };
+use type_auth::{ActiveModel, Column, Entity, UserRecord};
 use type_core::UserId;
-use type_user::{ActiveModel, Column, Entity, UserRecord};
+
+use crate::error::AuthError;
 
 pub struct AuthMapper;
 
@@ -64,7 +68,7 @@ impl AuthMapper {
                     };
                     return Ok(result);
                 };
-                Err(ContextualError::from(e))
+                Err(ContextualError::from(e))?
             }
         }
     }
@@ -90,7 +94,8 @@ impl AuthMapper {
             refresh_token_expire_at: NotSet,
         }
         .insert(db)
-        .await?;
+        .await
+        .into_contextual()?;
         Self::sync_auth_user_id_sequence(db).await?;
 
         Ok(())
@@ -103,7 +108,8 @@ impl AuthMapper {
                  GREATEST((SELECT COALESCE(MAX(id), 0) FROM auth_user), 1)
              )",
         )
-        .await?;
+        .await
+        .into_contextual()?;
         Ok(())
     }
 }
@@ -119,7 +125,8 @@ impl AuthMapper {
             .filter(Column::Id.eq(user_id))
             .col_expr(Column::Password, Expr::value(password))
             .exec(db)
-            .await?
+            .await
+            .into_contextual()?
             .rows_affected
             .to_ok()
     }
@@ -138,9 +145,52 @@ impl AuthMapper {
                 ..Default::default()
             }
             .update(db)
-            .await?,
+            .await
+            .into_contextual()?,
         )
         .to_ok()
+    }
+
+    pub async fn update_nickname(
+        db: &impl ConnectionTrait,
+        user_id: UserId,
+        nickname: String,
+    ) -> Result<u64> {
+        Entity::update_many()
+            .filter(Column::Id.eq(user_id))
+            .col_expr(Column::Nickname, Expr::value(nickname))
+            .exec(db)
+            .await
+            .into_contextual()?
+            .rows_affected
+            .to_ok()
+    }
+
+    pub async fn update_avatar(
+        db: &impl ConnectionTrait,
+        user_id: UserId,
+        new_key: String,
+    ) -> Result<Option<String>> {
+        let old_key: Option<String> = Entity::find_by_id(user_id)
+            .select_only()
+            .column(Column::AvatarFileId)
+            .lock_exclusive()
+            .into_tuple::<Option<String>>()
+            .one(db)
+            .await
+            .into_contextual()?
+            .ok_or(AuthError::UserNotFound)?;
+
+        ActiveModel {
+            id: Set(user_id),
+            avatar_file_id: Set(Some(new_key)),
+            ..Default::default()
+        }
+        .update(db)
+        .await
+        .into_contextual()?;
+
+        Ok(old_key)
     }
 }
 
@@ -151,6 +201,19 @@ pub struct UserPasswordId {
 }
 // 查询
 impl AuthMapper {
+    pub async fn query_by_id(
+        db: &impl ConnectionTrait,
+        user_id: UserId,
+    ) -> Result<Option<UserRecord>> {
+        Entity::find()
+            .filter(Column::Id.eq(user_id))
+            .one(db)
+            .await
+            .into_contextual()?
+            .map(UserRecord::from)
+            .to_ok()
+    }
+
     /// 按账号查询用户
     pub async fn query_by_account(
         db: &impl ConnectionTrait,
@@ -167,19 +230,22 @@ impl AuthMapper {
             )
             .into_model::<UserPasswordId>()
             .one(db)
-            .await?
+            .await
+            .into_contextual()?
             .to_ok()
     }
 
     pub async fn exist_by_email(db: &impl ConnectionTrait, email: &str) -> Result<bool> {
-        let ret = Entity::find()
+        Entity::find()
             .filter(Column::Email.eq(email))
             .select_only()
             .column(Column::Id)
             .into_tuple::<UserId>()
             .one(db)
-            .await?;
-        Ok(ret.is_some())
+            .await
+            .into_contextual()?
+            .is_some()
+            .to_ok()
     }
 
     pub async fn query_refresh_token(
@@ -193,7 +259,8 @@ impl AuthMapper {
             .column(Column::RefreshTokenExpireAt)
             .into_tuple::<(Option<String>, Option<DateTime>)>()
             .one(db)
-            .await?
+            .await
+            .into_contextual()?
             .unwrap_or((None, None));
 
         match (refresh_token, refresh_token_expire_at) {

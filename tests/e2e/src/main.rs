@@ -1,11 +1,10 @@
 use std::error::Error;
 
 use memory_seek_api::{
-    config::ApiConfig, storage::impls::FileStorage, transport::impls::ReqwestTransport,
+    config::ApiConfig, storage::impls::MemoryStorage, transport::impls::ReqwestTransport,
 };
 
-type ApiClient = memory_seek_api::client::ApiClient<ReqwestTransport, FileStorage>;
-pub const LOGIN_CRED: (&str, &str) = ("Test123456", "Test123456");
+type ApiClient = memory_seek_api::client::ApiClient<ReqwestTransport, MemoryStorage>;
 mod error;
 mod once;
 
@@ -22,14 +21,18 @@ async fn main() {
 async fn run() -> Result<(), Box<dyn Error>> {
     let state = server::init(None).await?.state;
 
+    let mut builder = reqwest::Client::builder();
+    if let Ok(proxy) = std::env::var("E2E_PROXY") {
+        builder = builder.proxy(reqwest::Proxy::all(proxy)?);
+    }
+
+    let base_url =
+        std::env::var("E2E_BASE_URL").unwrap_or_else(|_| "http://127.0.0.1:7984".to_owned());
+
     let client = ApiClient::new(
-        ApiConfig::new("http://localhost:7984")?,
-        ReqwestTransport::new(
-            reqwest::Client::builder()
-                .proxy(reqwest::Proxy::all("http://127.0.0.1:8000").unwrap())
-                .build()?,
-        ),
-        FileStorage::new("./tests/e2e/cred.json")?,
+        ApiConfig::new(base_url)?,
+        ReqwestTransport::new(builder.build()?),
+        MemoryStorage::new(),
     );
     once::run(&state, &client).await?;
 

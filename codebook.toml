@@ -11,6 +11,10 @@ words = [
     "rpassword",
     "mailhog",
     "setval",
+    "rustfmt",
+    "clippy",
+    "cli",
+    "txn",
 
     "HKDF",
     "matroska",

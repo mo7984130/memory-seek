@@ -96,7 +96,7 @@ run cargo hack check \
     "${depth[@]}"
 
 # 3. 分层断言
-for pkg in auth user; do
+for pkg in auth; do
     tree_log="$(mktemp)"
     if ! cargo tree -p "$pkg" --no-default-features -e normal --prefix none \
         >"$tree_log" 2>&1; then
