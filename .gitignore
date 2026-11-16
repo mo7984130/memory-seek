@@ -2,3 +2,4 @@ target/
 config.yml
 tests/e2e/cred.json
 todo.md
+dist/
