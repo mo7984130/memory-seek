@@ -1,3 +1,4 @@
+use std::net::IpAddr;
 use std::sync::Arc;
 
 use audit::recorder::AuditRecorder;
@@ -20,6 +21,7 @@ use common_db::db_transaction;
 use constant::{AuditEventTypes, RedisKeys};
 use media_validator::{MediaMetadata, MediaValidator};
 use sea_orm::DatabaseConnection;
+use serde_json::json;
 use share::visual_token::VisualToken;
 use tokio::task;
 use type_auth::{
@@ -243,7 +245,11 @@ impl AuthService {
             account = %req.account
         )
     )]
-    pub async fn login(state: &AuthState, req: LoginRequest) -> Result<LoginResponse, AuthError> {
+    pub async fn login(
+        state: &AuthState,
+        client_ip: IpAddr,
+        req: LoginRequest,
+    ) -> Result<LoginResponse, AuthError> {
         // 判断账号是否存在并且获取信息
         let user = match AuthMapper::query_by_account(&state.db, &req.account).await? {
             Some(v) => v,
@@ -301,7 +307,12 @@ impl AuthService {
         let user = db_transaction!(&state.db, |txn| {
             let user = state
                 .repo
-                .update_refresh_token(user.id, &new_refresh_token, new_refresh_token_expire_at)
+                .update_refresh_token(
+                    txn,
+                    user.id,
+                    &new_refresh_token,
+                    new_refresh_token_expire_at,
+                )
                 .await
                 .inspect_err_async(|_| async {
                     state
@@ -315,7 +326,8 @@ impl AuthService {
 
             AuditRecorder::append(
                 txn,
-                AuditEvent::new(AuditEventTypes::auth::Login, AuditActor::User(user.id)),
+                AuditEvent::new(AuditEventTypes::auth::Login, AuditActor::User(user.id))
+                    .with_detail(serde_json::json!({ "client_ip": client_ip })),
             )
             .await?;
 
@@ -411,7 +423,7 @@ impl AuthService {
         user_id: UserId,
         refresh_token: &str,
     ) -> Result<bool, AuthError> {
-        match state.repo.get_refresh_token(user_id).await? {
+        match state.repo.get_refresh_token(&state.db, user_id).await? {
             None => Ok(false),
             Some(token) => Ok(token == refresh_token),
         }
@@ -429,10 +441,24 @@ impl AuthService {
         user_id: UserId,
         req: UpdateNicknameRequest,
     ) -> Result<(), AuthError> {
-        state
-            .repo
-            .update_nickname(user_id, req.new_nickname)
+        db_transaction!(&state.db, |txn| {
+            let nickname = req.new_nickname;
+            state
+                .repo
+                .update_nickname(txn, user_id, nickname.clone())
+                .await?;
+            AuditRecorder::append(
+                txn,
+                AuditEvent::new(
+                    AuditEventTypes::user::UpdateNickname,
+                    AuditActor::User(user_id),
+                )
+                .with_detail(json!({"new_nickname": nickname})),
+            )
             .await?;
+            Ok::<_, AuthError>(())
+        })
+        .await?;
         Ok(())
     }
 
@@ -460,19 +486,30 @@ impl AuthService {
 
         // 更新数据库
         // 如果失败的话, 删除刚才上传的文件
-        let old_key = state
-            .repo
-            .update_avatar(user_id, avatar_key.clone())
-            .await
-            .inspect_err_async(|_| async {
-                state
-                    .s3_client
-                    .delete(&avatar_key)
-                    .await
-                    .into_contextual()
-                    .emit_if_err();
-            })
+        let old_key = db_transaction!(&state.db, |txn| {
+            let old_key = state.repo.update_avatar(txn, user_id, &avatar_key).await?;
+            AuditRecorder::append(
+                txn,
+                AuditEvent::new(
+                    AuditEventTypes::user::UpdateAvatar,
+                    AuditActor::User(user_id),
+                )
+                .with_detail(json!({"avatar_key": avatar_key})),
+            )
             .await?;
+
+            Ok::<_, AuthError>(old_key)
+        })
+        .await
+        .inspect_err_async(|_| async {
+            state
+                .s3_client
+                .delete(&avatar_key)
+                .await
+                .into_contextual()
+                .emit_if_err();
+        })
+        .await?;
 
         // 删除旧头像
         // 错误不返回
@@ -501,7 +538,7 @@ impl AuthService {
         state: Arc<AuthState>,
         user_id: UserId,
     ) -> Result<UserInfo, AuthError> {
-        match state.repo.get_user_self_info(user_id).await? {
+        match state.repo.get_user_self_info(&state.db, user_id).await? {
             Some(info) => Ok(info),
             None => Err(AuthError::UserNotFound),
         }

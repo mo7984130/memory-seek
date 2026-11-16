@@ -6,6 +6,8 @@ license.workspace = true
 
 [features]
 default = []
+prod = ["auth"]
+
 auth = ["dep:auth", "server/s3_client", "server/db", "server/redis", "server/email", "server/token_cipher", "server/multi_level_cache"]
 
 [dependencies]

@@ -48,6 +48,8 @@ pub enum Reason {
     OssError,
     // 加密（只用于内部数据）
     EncryptFail,
+    // 序列化 (只用于内部数据)
+    SerializeFail,
 }
 
 impl ContextualError {

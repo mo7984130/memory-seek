@@ -11,7 +11,7 @@ use axum::{
 use common_core::{ext::result::ToOkExt, types::R};
 use common_web::{
     controller_router::ControllerRouter,
-    extractors::{AuthUser, ValidatedJson},
+    extractors::{AuthUser, ClientIp, ValidatedJson},
     web_domain::WebDomain,
     web_error::WebError,
 };
@@ -131,9 +131,10 @@ impl AuthController {
 impl AuthController {
     pub async fn login(
         State(state): State<Arc<AuthState>>,
+        ClientIp(ip): ClientIp,
         ValidatedJson(req): ValidatedJson<LoginRequest>,
     ) -> Result<R<LoginResponse>, WebError> {
-        R::ok(AuthService::login(&state, req).await?).to_ok()
+        R::ok(AuthService::login(&state, ip, req).await?).to_ok()
     }
 
     pub async fn update_nickname(

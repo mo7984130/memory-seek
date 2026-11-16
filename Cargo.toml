@@ -5,6 +5,7 @@ members = [
     "common/db",
     "common/crypto",
     "common/web",
+    "common/tokio",
     "types/core",
     "types/audit",
     "types/auth",
@@ -83,6 +84,8 @@ thiserror = "2.0.21"
 derive_more = "2.1.1"
 # 异步运行时
 tokio = "1.54.1"
+# 异步工具
+tokio-util = "0.7.20"
 # 配置文件
 config = "0.15.27"
 # Http相关类型
@@ -103,6 +106,8 @@ uuid = { version = "1.29.2", features = ["v4"] }
 short-uuid = "0.2.1"
 # 流式future
 futures = "0.3.34"
+# 多线程哈希表
+dashmap = "6.2.1"
 
 # 邮件
 lettre = "0.11.23"
