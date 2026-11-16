@@ -1,10 +1,8 @@
 use std::error::Error;
 
-use memory_seek_api::{
-    config::ApiConfig, storage::impls::MemoryStorage, transport::impls::ReqwestTransport,
-};
+use api::{config::ApiConfig, storage::impls::MemoryStorage, transport::impls::ReqwestTransport};
 
-type ApiClient = memory_seek_api::client::ApiClient<ReqwestTransport, MemoryStorage>;
+type ApiClient = api::client::ApiClient<ReqwestTransport, MemoryStorage>;
 mod error;
 mod once;
 

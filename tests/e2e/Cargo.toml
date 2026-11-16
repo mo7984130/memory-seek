@@ -7,7 +7,7 @@ license.workspace = true
 
 [dependencies]
 common-core.workspace = true
-memory-seek-api.workspace = true
+api.workspace = true
 type-auth.workspace = true
 server = { workspace = true, features = ["redis"] }
 constant.workspace = true
