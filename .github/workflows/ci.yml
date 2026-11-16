@@ -102,7 +102,13 @@ jobs:
               run: |
                 echo "RUSTC_WRAPPER=sccache" >> "$GITHUB_ENV"
                 echo "SCCACHE_GHA_ENABLED=true" >> "$GITHUB_ENV"
-            - run: bash scripts/check-features.sh --depth 2
+            - name: Check features (depth 2)
+              if: github.event_name != 'pull_request' || github.base_ref != 'main'
+              run: bash scripts/check-features.sh --depth 2
+
+            - name: Check features (full)
+              if: github.event_name == 'pull_request' && github.base_ref == 'main'
+              run: bash scripts/check-features.sh --full
 
             - name: Show sccache stats
               if: always()
