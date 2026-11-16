@@ -74,6 +74,11 @@ impl AuditEvent {
         self.target_id = target_id.into();
         self
     }
+
+    pub fn with_detail(mut self, detail: Value) -> Self {
+        self.detail = Some(detail);
+        self
+    }
 }
 
 #[cfg(feature = "orm")]

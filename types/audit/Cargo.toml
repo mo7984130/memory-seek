@@ -12,6 +12,7 @@ orm = ["dep:common-db", "dep:linkme", "dep:sea-orm", "type-core/orm"]
 common-core.workspace = true
 type-core.workspace = true
 # Detail序列化
+serde.workspace = true
 serde_json.workspace = true
 # ORM支持
 sea-orm = { workspace = true, optional = true }

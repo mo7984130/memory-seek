@@ -41,6 +41,8 @@ thiserror.workspace = true
 bytes.workspace = true
 # uuid
 uuid.workspace = true
+# Json序列化
+serde_json.workspace = true
 
 # controller
 axum = { workspace = true, optional = true, features = ["macros"] }

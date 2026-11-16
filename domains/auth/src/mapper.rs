@@ -169,7 +169,7 @@ impl AuthMapper {
     pub async fn update_avatar(
         db: &impl ConnectionTrait,
         user_id: UserId,
-        new_key: String,
+        new_key: &str,
     ) -> Result<Option<String>> {
         let old_key: Option<String> = Entity::find_by_id(user_id)
             .select_only()
@@ -183,7 +183,7 @@ impl AuthMapper {
 
         ActiveModel {
             id: Set(user_id),
-            avatar_file_id: Set(Some(new_key)),
+            avatar_file_id: Set(Some(new_key.to_string())),
             ..Default::default()
         }
         .update(db)
