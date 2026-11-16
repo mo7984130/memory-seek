@@ -7,7 +7,7 @@ license.workspace = true
 [dependencies]
 common-core.workspace = true
 type-core.workspace = true
-type-user.workspace = true
+type-auth.workspace = true
 
 # Http类型库
 http.workspace = true

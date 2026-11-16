@@ -1,6 +1,6 @@
 use common_core::{contextual::ContextualError, type_registry::TypeRegistry};
 use common_web::app_router::AppRouter;
-#[cfg(any(feature = "auth", feature = "user"))]
+#[cfg(feature = "auth")]
 use common_web::web_domain::WebDomain;
 
 pub fn init(
@@ -11,9 +11,6 @@ pub fn init(
 
     #[cfg(feature = "auth")]
     auth::controller::AuthDomain::init("/auth", registry, &mut router)?;
-
-    #[cfg(feature = "user")]
-    user::controller::UserWebDomain::init("/user", registry, &mut router)?;
 
     Ok(router)
 }

@@ -7,7 +7,7 @@ members = [
     "common/web",
     "types/core",
     "types/audit",
-    "types/user",
+    "types/auth",
     "libs/email_client",
     "libs/media_validator",
     "libs/s3_client",
@@ -15,7 +15,6 @@ members = [
     "domains/share",
     "domains/audit",
     "domains/auth",
-    "domains/user",
     "tests/e2e",
     "api",
     "server/server",
@@ -45,7 +44,7 @@ common-crypto.path = "common/crypto"
 common-web.path = "common/web"
 type-core.path = "types/core"
 type-audit.path = "types/audit"
-type-user.path = "types/user"
+type-auth.path = "types/auth"
 email_client.path = "libs/email_client"
 media_validator.path = "libs/media_validator"
 s3-client.path = "libs/s3_client"
@@ -53,7 +52,6 @@ constant.path = "domains/constant"
 share.path = "domains/share"
 audit.path = "domains/audit"
 auth.path = "domains/auth"
-user.path = "domains/user"
 server.path = "server/server"
 memory-seek-api.path = "api"
 

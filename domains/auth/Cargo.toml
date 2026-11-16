@@ -14,10 +14,12 @@ common-web = { workspace = true, optional = true }
 common-db.workspace = true
 common-crypto = { workspace = true, features = ["tokio"] }
 type-core.workspace = true
-type-user = { workspace = true, features = ["orm"] }
+type-auth = { workspace = true, features = ["orm"] }
 constant.workspace = true
 audit.workspace = true
 share.workspace = true
+media_validator.workspace = true
+s3-client.workspace = true
 # ORM
 sea-orm.workspace = true
 # Redis
@@ -35,6 +37,10 @@ multi-level-cache.workspace = true
 validator.workspace = true
 # 错误定义
 thiserror.workspace = true
+# 字节
+bytes.workspace = true
+# uuid
+uuid.workspace = true
 
 # controller
 axum = { workspace = true, optional = true, features = ["macros"] }

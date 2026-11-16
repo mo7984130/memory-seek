@@ -2,7 +2,7 @@ use bytes::Bytes;
 use server::state::AppState;
 use std::fs::{self};
 use tracing::info;
-use type_user::UpdateNicknameRequest;
+use type_auth::UpdateNicknameRequest;
 
 use crate::{ApiClient, error::E2eError};
 

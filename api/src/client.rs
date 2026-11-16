@@ -12,8 +12,8 @@ use http::{
     request::Builder,
 };
 use serde::{Serialize, de::DeserializeOwned};
+use type_auth::RefreshAccessTokenResponse;
 use type_core::UserId;
-use type_user::RefreshAccessTokenResponse;
 use validator::ValidationErrors;
 
 use crate::{

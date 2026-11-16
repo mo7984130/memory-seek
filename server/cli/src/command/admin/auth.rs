@@ -2,7 +2,7 @@ use auth::service::AuthService;
 use clap::Args;
 use common_core::contextual::ext::IntoContextualExt;
 use server::state::AppState;
-use type_user::CreateAdminArgs;
+use type_auth::CreateAdminArgs;
 
 use crate::error::CliError;
 

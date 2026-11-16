@@ -1,4 +1,4 @@
-use type_user::{LoginRequest, LoginResponse, RegisterRequest, SendEmailRequest, UserInfo};
+use type_auth::{LoginRequest, LoginResponse, RegisterRequest, SendEmailRequest, UserInfo};
 use validator::Validate;
 
 use crate::{

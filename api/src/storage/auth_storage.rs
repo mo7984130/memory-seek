@@ -2,8 +2,8 @@ use common_core::{
     ext::result::ToOkExt,
     time::{self, DateTime},
 };
+use type_auth::LoginResponse;
 use type_core::UserId;
-use type_user::LoginResponse;
 
 use crate::storage::{Storage, StorageError};
 

@@ -13,7 +13,7 @@ pub async fn run(state: &AppState, client: &ApiClient) -> Result<(), E2eError> {
     let password = "register_test123".to_owned();
 
     client
-        .send_email_code(type_user::SendEmailRequest {
+        .send_email_code(type_auth::SendEmailRequest {
             email: email.clone(),
         })
         .await?;
@@ -28,7 +28,7 @@ pub async fn run(state: &AppState, client: &ApiClient) -> Result<(), E2eError> {
     )?;
 
     let info = client
-        .register(type_user::RegisterRequest {
+        .register(type_auth::RegisterRequest {
             username,
             email: email.clone(),
             password: password.clone(),
@@ -46,7 +46,7 @@ pub async fn run(state: &AppState, client: &ApiClient) -> Result<(), E2eError> {
     info!(
         "登录成功: {:?}",
         client
-            .login(type_user::LoginRequest {
+            .login(type_auth::LoginRequest {
                 account: email,
                 password,
             })

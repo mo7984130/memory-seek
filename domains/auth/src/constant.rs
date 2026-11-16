@@ -8,3 +8,6 @@ pub const REFRESH_TOKEN_LEN: usize = 32;
 pub const REFRESH_TOKEN_TTL: Duration = Duration::from_hours(30 * 24);
 pub const EMAIL_CODE_LEN: usize = 6;
 pub const EMAIL_CODE_EXPIRATION: Duration = Duration::from_mins(10);
+pub const GENERATE_INVITER_CODE_MAX_RETRY: u8 = 3;
+pub const INVITER_CODE_LEN: usize = 6;
+pub const INVITER_CODE_TTL: Duration = Duration::from_secs(600);

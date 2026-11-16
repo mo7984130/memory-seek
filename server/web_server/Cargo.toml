@@ -6,8 +6,7 @@ license.workspace = true
 
 [features]
 default = []
-auth = ["dep:auth", "server/db", "server/redis", "server/email", "server/token_cipher", "server/multi_level_cache"]
-user = ["dep:user", "server/db", "server/redis", "server/token_cipher", "server/s3_client", "server/multi_level_cache"]
+auth = ["dep:auth", "server/s3_client", "server/db", "server/redis", "server/email", "server/token_cipher", "server/multi_level_cache"]
 
 [dependencies]
 server = { workspace = true, features = [
@@ -33,5 +32,3 @@ serde = { workspace = true, features = ["derive"] }
 
 # auth
 auth = { workspace = true, optional = true, features = ["controller"] }
-# user
-user = { workspace = true, optional = true, features = ["controller"] }
