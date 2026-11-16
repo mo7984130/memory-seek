@@ -4,15 +4,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      version:
-        description: "版本号，如 1.2.3（tag 为 v1.2.3）；留空则读取合并 PR 的 release: 标签"
-        required: false
-        type: string
 
 permissions:
   contents: write
-  pull-requests: read
 
 concurrency:
   group: release
@@ -24,76 +18,13 @@ env:
   TARGET: x86_64-unknown-linux-gnu
 
 jobs:
-  resolve:
-    name: resolve
-    runs-on: ubuntu-22.04
-    outputs:
-      version: ${{ steps.resolve.outputs.version }}
-      commit: ${{ steps.resolve.outputs.commit }}
-      skip: ${{ steps.resolve.outputs.skip }}
-    steps:
-      - name: Resolve version
-        id: resolve
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          INPUT_VERSION: ${{ inputs.version }}
-          INPUT_COMMIT: ${{ inputs.commit }}
-        run: |
-          set -euo pipefail
-
-          version="${INPUT_VERSION#v}"
-          commit="${INPUT_COMMIT:-$GITHUB_SHA}"
-
-          if [ -z "$version" ]; then
-            labels=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
-              --jq '[.[] | select(.merged_at != null) | .labels[].name | select(startswith("release:"))]')
-            count=$(jq 'length' <<<"$labels")
-            if [ "$count" -ne 1 ]; then
-              echo "::error::commit $GITHUB_SHA 需要且只能关联一个 release:X.Y.Z 标签，实际 $count 个"
-              exit 1
-            fi
-            version=$(jq -r '.[0] | sub("^release:"; "")' <<<"$labels")
-          fi
-
-          if ! grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' <<<"$version"; then
-            echo "::error::非法版本号：$version（应为 X.Y.Z）"
-            exit 1
-          fi
-
-          skip=false
-          if gh release view "v$version" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
-            echo "::warning::v$version 已发布，跳过"
-            skip=true
-          fi
-
-          {
-            echo "version=$version"
-            echo "commit=$commit"
-            echo "skip=$skip"
-          } >> "$GITHUB_OUTPUT"
-
-      - name: Summary
-        if: always()
-        run: |
-          {
-            echo "### Release v${{ steps.resolve.outputs.version }}"
-            echo ""
-            echo "| 项目 | 值 |"
-            echo "| --- | --- |"
-            echo "| 版本 | \`${{ steps.resolve.outputs.version || '(unknown)' }}\` |"
-            echo "| Commit | \`${{ steps.resolve.outputs.commit || github.sha }}\` |"
-            echo "| 跳过 | \`${{ steps.resolve.outputs.skip || 'false' }}\` |"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-  build:
-    name: build
-    needs: resolve
-    if: needs.resolve.outputs.skip != 'true'
+  release:
+    name: release
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v5
         with:
-          ref: ${{ needs.resolve.outputs.commit }}
+          fetch-depth: 0
 
       - uses: dtolnay/rust-toolchain@master
         with:
@@ -103,47 +34,11 @@ jobs:
         with:
           shared-key: release
 
-      - name: Build web-server
-        run: cargo build --release --locked -p web-server --features auth
-
-      - name: Build cli
-        run: cargo build --release --locked -p cli
-
-      - name: Package
-        run: |
-          set -euo pipefail
-          mkdir -p dist
-          NAME="memory-seek-v${{ needs.resolve.outputs.version }}-${TARGET}"
-          tar -czf "dist/${NAME}.tar.gz" -C target/release web-server cli
-          cp LICENSE-MIT LICENSE-APACHE dist/
-          ( cd dist && sha256sum "${NAME}.tar.gz" > SHA256SUMS )
-
-      - uses: actions/upload-artifact@v4
+      - name: Semantic release
+        uses: cycjimmy/semantic-release-action@v4
         with:
-          name: dist
-          path: dist/
-          if-no-files-found: error
-
-  publish:
-    name: publish
-    needs: [resolve, build]
-    if: needs.resolve.outputs.skip != 'true'
-    runs-on: ubuntu-22.04
-    steps:
-      - uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: dist
-
-      - name: Publish release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ needs.resolve.outputs.version }}
-          target_commitish: ${{ needs.resolve.outputs.commit }}
-          name: v${{ needs.resolve.outputs.version }}
-          generate_release_notes: true
-          files: |
-            dist/*.tar.gz
-            dist/SHA256SUMS
-            dist/LICENSE-MIT
-            dist/LICENSE-APACHE
+          semantic_version: 24
+          extra_plugins: |
+            @semantic-release/exec@^7
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
