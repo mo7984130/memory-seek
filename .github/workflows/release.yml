@@ -1,0 +1,60 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*"
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.100.0"
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          shared-key: release
+
+      - name: Build web-server
+        run: cargo build --release --locked -p web-server --features auth
+
+      - name: Build cli
+        run: cargo build --release --locked -p cli
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          TARGET="x86_64-unknown-linux-gnu"
+          NAME="memory-seek-${GITHUB_REF_NAME}-${TARGET}"
+          tar -czf "dist/${NAME}.tar.gz" \
+            -C target/release web-server cli
+          cp LICENSE-MIT LICENSE-APACHE dist/
+          cd dist
+          sha256sum "${NAME}.tar.gz" > SHA256SUMS
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.tar.gz
+            dist/SHA256SUMS
+            dist/LICENSE-MIT
+            dist/LICENSE-APACHE
+          generate_release_notes: true
