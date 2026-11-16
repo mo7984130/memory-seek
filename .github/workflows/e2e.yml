@@ -3,8 +3,6 @@ name: E2E
 on:
   pull_request:
     branches: [main, dev]
-  push:
-    branches: [dev]
   workflow_dispatch:
 
 permissions:
@@ -41,7 +39,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           shared-key: rust-debug
-          save-if: ${{ github.ref == 'refs/heads/dev' || github.ref == 'refs/heads/main' }}
+          save-if: ${{ github.event_name == 'pull_request' }}
 
       - name: Start service stack
         run: |
