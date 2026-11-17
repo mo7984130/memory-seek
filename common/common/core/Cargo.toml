@@ -27,6 +27,7 @@ chrono = { workspace = true, features = ["serde"] }
 tracing.workspace = true
 # 序列化
 serde = { workspace = true, features = ["derive"] }
+serde_json.workspace = true
 
 # ORM错误转化
 sea-orm = { workspace = true, optional = true }

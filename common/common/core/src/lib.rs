@@ -5,3 +5,4 @@ pub mod future;
 pub mod time;
 pub mod type_registry;
 pub mod types;
+pub mod util;

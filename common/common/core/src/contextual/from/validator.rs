@@ -1,6 +1,6 @@
 use validator::{ValidationErrors, ValidationErrorsKind};
 
-pub fn format_validation_error_msg(errors: &ValidationErrors) -> String {
+pub fn format_validation_errors_msg(errors: &ValidationErrors) -> String {
     errors
         .errors()
         .iter()
