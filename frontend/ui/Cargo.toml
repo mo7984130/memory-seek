@@ -1,0 +1,37 @@
+[package]
+name = "ui"
+version = "0.1.0"
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+common-core.workspace = true
+type-auth.workspace = true
+type-core.workspace = true
+api.workspace = true
+
+# gpui
+gpui-kit.workspace = true
+# 日志
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+# 二进制嵌入
+rust-embed.workspace = true
+# 错误定义
+thiserror.workspace = true
+# gpui使用的是anyhow
+anyhow.workspace = true
+# 序列化
+serde.workspace = true
+# 目录规范
+directories.workspace = true
+# 异步运行时
+tokio = { workspace = true, features = ["rt-multi-thread"] }
+# 字节
+bytes.workspace = true
+# 效验器
+validator.workspace = true
+# HttpBody
+http-body.workspace = true
+# 网络请求
+reqwest.workspace = true
