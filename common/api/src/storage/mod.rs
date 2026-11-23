@@ -5,14 +5,7 @@ pub use auth_storage::AuthStorage;
 
 use serde::{Serialize, de::DeserializeOwned};
 
-#[derive(Debug, thiserror::Error)]
-pub enum StorageError {
-    #[error("IO 错误: {0}")]
-    Io(#[from] std::io::Error),
-    #[error("序列化错误: {0}")]
-    Serde(#[from] serde_json::Error),
-}
-
+pub use common_core::util::DeferredFileError as StorageError;
 pub struct StorageEntry {
     pub key: String,
     pub value: serde_json::Value,
@@ -67,4 +60,6 @@ pub trait Storage: Send + Sync + 'static {
 
         Ok(())
     }
+
+    fn flush(&self) -> Result<(), StorageError>;
 }

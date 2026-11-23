@@ -24,6 +24,8 @@ serde.workspace = true
 tokio.workspace = true
 # 效验
 validator.workspace = true
+# 日志
+tracing.workspace = true
 
 # 序列化
 serde_json.workspace = true

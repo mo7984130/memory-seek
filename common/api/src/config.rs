@@ -26,7 +26,8 @@ impl ApiConfig {
 impl Default for ApiConfig {
     fn default() -> Self {
         Self {
-            base_url: "https://api.memory-seek.driftcloud.cn".to_owned(),
+            base_url: std::env::var("MEMORY_SEEK_API_BASE_URL")
+                .unwrap_or("https://api.memory-seek.driftcloud.cn".to_owned()),
         }
     }
 }

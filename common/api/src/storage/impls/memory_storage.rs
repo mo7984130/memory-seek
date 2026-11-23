@@ -45,4 +45,8 @@ impl Storage for MemoryStorage {
 
         Ok(())
     }
+
+    fn flush(&self) -> Result<(), StorageError> {
+        Ok(())
+    }
 }

@@ -1,4 +1,4 @@
-use api::client::ApiError;
+use api::error::ApiError;
 use common_core::contextual::ContextualError;
 
 #[derive(Debug, thiserror::Error)]

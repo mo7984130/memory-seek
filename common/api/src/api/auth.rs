@@ -1,12 +1,7 @@
 use type_auth::{LoginRequest, LoginResponse, RegisterRequest, SendEmailRequest, UserInfo};
 use validator::Validate;
 
-use crate::{
-    Result,
-    client::{ApiClient, ApiError},
-    storage::Storage,
-    transport::Transport,
-};
+use crate::{Result, client::ApiClient, error::ApiError, storage::Storage, transport::Transport};
 
 impl<T: Transport, S: Storage> ApiClient<T, S> {
     pub async fn register(&self, req: RegisterRequest) -> Result<UserInfo> {

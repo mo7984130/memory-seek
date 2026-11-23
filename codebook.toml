@@ -15,6 +15,7 @@ words = [
     "clippy",
     "cli",
     "txn",
+    "gpui",
 
     "HKDF",
     "matroska",

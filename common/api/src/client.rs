@@ -1,54 +1,40 @@
 use std::{borrow::Cow, sync::Arc};
 
-use crate::{
-    Result,
-    transport::{Body, TransportError},
-};
+use crate::{Result, error::ApiError, transport::Body};
 use bytes::Bytes;
-use common_core::{ext::result::ToOkExt, time::DateTime, types::SucR};
+use common_core::{
+    ext::result::ToOkExt,
+    time::DateTime,
+    types::{ErrR, SucR},
+};
 use http::{
     HeaderValue, Method, Request, Response, StatusCode,
-    header::{self, InvalidHeaderValue},
+    header::{self},
     request::Builder,
 };
 use serde::{Serialize, de::DeserializeOwned};
 use type_auth::RefreshAccessTokenResponse;
 use type_core::UserId;
-use validator::ValidationErrors;
 
 use crate::{
     config::ApiConfig,
-    storage::{AuthStorage, Storage, StorageError},
+    storage::{AuthStorage, Storage},
     transport::Transport,
 };
 
+use tracing::error;
+
 type OnUnauthCallback = Arc<dyn Fn() + Send + Sync + 'static>;
 
-#[derive(Clone)]
 pub struct ApiClient<T: Transport, S: Storage> {
     pub inner: Arc<Inner<T, S>>,
 }
-
-#[derive(Debug, thiserror::Error)]
-pub enum ApiError {
-    /// 请求构建失败(URI、请求头等非法),与网络状态无关。
-    #[error("请求构建失败: {0}")]
-    Build(#[from] http::Error),
-    /// 传输失败,流式响应体读取过程中的错误也归入此类。
-    #[error("网络错误: {0}")]
-    Transport(#[from] TransportError),
-    #[error("存储错误: {0}")]
-    Storage(#[from] StorageError),
-    #[error("序列化失败: {0}")]
-    Decode(#[from] serde_json::Error),
-    #[error("请求错误 {status}")]
-    HttpStatus { status: StatusCode, body: Bytes },
-    #[error("未登录")]
-    NotLoggedIn,
-    #[error("非法请求头值")]
-    InvalidHeader(#[from] InvalidHeaderValue),
-    #[error("参数效验错误: {0}")]
-    InvalidReq(#[from] ValidationErrors),
+impl<T: Transport, S: Storage> Clone for ApiClient<T, S> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: Arc::clone(&self.inner),
+        }
+    }
 }
 
 pub struct Inner<T: Transport, S: Storage> {
@@ -297,13 +283,20 @@ impl<T: Transport, S: Storage> ApiClient<T, S> {
     }
 
     async fn parse_envelope<V: DeserializeOwned>(resp: Response<Body>) -> Result<V> {
-        if !resp.status().is_success() {
-            Err(ApiError::HttpStatus {
-                status: resp.status(),
-                body: resp.into_body().collect().await?,
-            })
+        let status = resp.status();
+        if !status.is_success() {
+            let body = resp.into_body().collect().await?;
+            let msg = match Self::deserialize::<ErrR>(&body) {
+                Err(e) => {
+                    error!("序列化服务器相应失败, 降级: {:?}", e);
+                    String::from_utf8_lossy(&body).into_owned()
+                }
+                Ok(r) => r.msg,
+            };
+            Err(ApiError::HttpStatus { status, msg })
         } else {
-            let r = Self::deserialize::<SucR<V>>(resp.into_body().collect().await?)?;
+            let body = resp.into_body().collect().await?;
+            let r = Self::deserialize::<SucR<V>>(&body)?;
             Ok(r.data)
         }
     }

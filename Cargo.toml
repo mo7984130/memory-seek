@@ -22,6 +22,8 @@ members = [
     "backend/server/web_server",
     "backend/server/cli",
 
+    "frontend/ui",
+
     "tests/e2e",
 ]
 
@@ -60,7 +62,6 @@ share.path = "backend/domains/share"
 audit.path = "backend/domains/audit"
 auth.path = "backend/domains/auth"
 server.path = "backend/server/server"
-
 
 # 时间
 chrono = "0.4.45"
@@ -142,3 +143,14 @@ multi-level-cache = { version = "0.1.6", features = ["redis-deadpool"] }
 validator = "0.21.0"
 # 正则校验
 regex = "1.13.1"
+
+
+
+# gpui
+gpui-kit = "0.10.0"
+# 二进制嵌入
+rust-embed = "8.14.0"
+# gpui使用的是anyhow
+anyhow = "1.0.104"
+# 目录规范
+directories = "6.0.0"

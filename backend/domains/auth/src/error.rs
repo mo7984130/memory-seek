@@ -1,4 +1,4 @@
-use common_core::contextual::{ContextualError, from::validator::format_validation_error_msg};
+use common_core::contextual::{ContextualError, from::validator::format_validation_errors_msg};
 use validator::ValidationErrors;
 
 #[derive(Debug, thiserror::Error)]
@@ -33,13 +33,13 @@ pub enum AuthError {
     #[error("图片效验失败: {}", 0)]
     ImageInvalid(#[from] media_validator::MediaValidatorError),
 
-    #[error(transparent)]
+    #[error("服务内部错误")]
     Internal(#[from] ContextualError),
 }
 pub type Result<T> = std::result::Result<T, AuthError>;
 
 impl From<ValidationErrors> for AuthError {
     fn from(value: ValidationErrors) -> Self {
-        Self::Validation(format_validation_error_msg(&value))
+        Self::Validation(format_validation_errors_msg(&value))
     }
 }

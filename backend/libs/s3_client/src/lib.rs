@@ -31,15 +31,15 @@ pub struct S3Client {
 
 #[derive(Debug, thiserror::Error)]
 pub enum S3Error {
-    #[error("Io错误: {}", 0)]
+    #[error("Io错误")]
     Io(#[from] std::io::Error),
-    #[error("Oss错误 {}", 0)]
+    #[error("Oss错误")]
     Oss(#[from] s3::error::S3Error),
-    #[error("凭证错误 {}", 0)]
+    #[error("凭证错误")]
     Credential(#[from] s3::creds::error::CredentialsError),
-    #[error("请求错误 {}", 0)]
+    #[error("请求错误")]
     Reqwest(#[from] reqwest::Error),
-    #[error("请求错误 {}, {}", status, url)]
+    #[error("请求错误")]
     Http { url: String, status: StatusCode },
 }
 impl S3Error {
