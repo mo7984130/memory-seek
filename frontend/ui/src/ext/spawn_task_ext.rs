@@ -5,7 +5,6 @@ use crate::{
 use gpui_kit::{AsyncApp, AsyncWindowContext, Context, Task, WeakEntity, Window};
 
 pub trait SpawnTaskExt<T: 'static> {
-    #[must_use]
     fn spawn_task<F>(&self, task: F) -> Task<()>
     where
         F: AsyncFnOnce(WeakEntity<T>, &mut AsyncApp) -> Result<()> + 'static;
@@ -18,7 +17,6 @@ pub trait SpawnTaskExt<T: 'static> {
     //     C: FnOnce(&mut T, &mut Context<T>, bool) + 'static;
 
     /// 窗口绑定任务：`finish` 里可以直接 toast
-    #[must_use]
     fn spawn_task_in<F, C>(&self, window: &Window, task: F, finish: C) -> Task<()>
     where
         F: AsyncFnOnce(WeakEntity<T>, &mut AsyncWindowContext) -> Result<()> + 'static,

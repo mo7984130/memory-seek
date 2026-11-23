@@ -16,6 +16,7 @@ words = [
     "cli",
     "txn",
     "gpui",
+    "wgpu",
 
     "HKDF",
     "matroska",
